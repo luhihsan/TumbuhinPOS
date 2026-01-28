@@ -1,0 +1,345 @@
+import 'package:flutter/material.dart';
+
+class AdminLogin extends StatefulWidget {
+  const AdminLogin({super.key});
+
+  @override
+  State<AdminLogin> createState() => _AdminLoginState();
+}
+
+class _AdminLoginState extends State<AdminLogin> {
+  final emailC = TextEditingController();
+  final passC = TextEditingController();
+  bool rememberMe = false;
+  bool obscure = true;
+
+  // TODO: ganti sesuai asset kamu
+  static const String logoPath = 'assets/images/logo_tumbuhin.png';
+  static const String heroPath = 'assets/images/pos_illustration.png';
+
+  @override
+  void dispose() {
+    emailC.dispose();
+    passC.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const panelColor = Color(0xFFBFE9FF); // biru muda seperti screenshot
+    final size = MediaQuery.of(context).size;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final maxWidth = c.maxWidth > 430 ? 430.0 : c.maxWidth;
+
+            return Center(
+              child: SizedBox(
+                width: maxWidth,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+
+                    // Logo
+                    SizedBox(
+                      height: 54,
+                      child: Image.asset(
+                        logoPath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Text(
+                          'Tumbuhin\nPOS Management',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF0EA5E9),
+                            height: 1.05,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Ilustrasi
+                    SizedBox(
+                      height: size.height * 0.25,
+                      child: Image.asset(
+                        heroPath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const SizedBox(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Tagline
+                    const Text(
+                      'Imagine Optimizing Your Business...\nAutomatically.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.3,
+                        color: Color(0xFF374151),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Dots indicator (fake slider indicator)
+                    const _DotsIndicator(activeIndex: 1, count: 3),
+
+                    const SizedBox(height: 12),
+
+                    // Panel biru
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: panelColor,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(18),
+                            topRight: Radius.circular(18),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'login to',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              const Text(
+                                'Admin Dashboard',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              // Email
+                              _InputField(
+                                controller: emailC,
+                                hintText: 'E-mail',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Password
+                              _InputField(
+                                controller: passC,
+                                hintText: 'Password',
+                                prefixIcon: Icons.lock_outline,
+                                obscureText: obscure,
+                                suffix: IconButton(
+                                  onPressed: () =>
+                                      setState(() => obscure = !obscure),
+                                  icon: Icon(
+                                    obscure
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // remember + forget
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: rememberMe,
+                                    onChanged: (v) =>
+                                        setState(() => rememberMe = v ?? false),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    visualDensity: const VisualDensity(
+                                      horizontal: -4,
+                                      vertical: -4,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Remember me',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: () {
+                                      // TODO: flow lupa password
+                                      debugPrint('Forget Password');
+                                    },
+                                    child: const Text(
+                                      'Forget Password?',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF1F2937),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // Login button (disabled style karena backend belum)
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: null, // nanti isi kalau API ready
+                                  style: ElevatedButton.styleFrom(
+                                    disabledBackgroundColor:
+                                        const Color(0xFF9CA3AF),
+                                    disabledForegroundColor:
+                                        const Color(0xFFE5E7EB),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const Spacer(),
+
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.only(bottom: 12),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.lock,
+                                          size: 14, color: Color(0xFF6B7280)),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'possystem.com',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF6B7280),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DotsIndicator extends StatelessWidget {
+  final int activeIndex;
+  final int count;
+
+  const _DotsIndicator({required this.activeIndex, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (i) {
+        final isActive = i == activeIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: isActive ? 28 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFF3B82F6) : const Color(0xFFD1D5DB),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _InputField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hintText;
+  final IconData prefixIcon;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final Widget? suffix;
+
+  const _InputField({
+    required this.controller,
+    required this.hintText,
+    required this.prefixIcon,
+    this.keyboardType,
+    this.obscureText = false,
+    this.suffix,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
+          prefixIcon: Icon(prefixIcon, color: const Color(0xFF6B7280)),
+          suffixIcon: suffix,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF93C5FD)),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+      ),
+    );
+  }
+}
