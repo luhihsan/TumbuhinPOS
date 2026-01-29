@@ -4,7 +4,13 @@ import 'package:pos_project_app/core/widgets/product_card.dart';
 
 class ProductGrid extends StatelessWidget {
   final List<Product> products;
-  const ProductGrid({super.key, required this.products});
+  final ValueChanged<OrderItemDraft> onAdd;
+
+  const ProductGrid({
+    super.key,
+    required this.products,
+    required this.onAdd,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +27,10 @@ class ProductGrid extends StatelessWidget {
             mainAxisSpacing: 12,
             childAspectRatio: 1.65,
           ),
-          itemBuilder: (context, i) => ProductCard(product: products[i]),
+          itemBuilder: (context, i) => ProductCard(
+            product: products[i],
+            onAdd: onAdd,
+          ),
         );
       },
     );

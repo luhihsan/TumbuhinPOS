@@ -8,6 +8,7 @@ import '../../../../core/widgets/product_grid.dart';
 import '../../../../core/widgets/order_panel.dart';
 import '../../../../core/widgets/realtime_clock.dart';
 import '../../navigation/user_drawer.dart';
+import 'package:pos_project_app/core/widgets/bill_management_dialog.dart';
 
 class PosProductScreen extends StatefulWidget {
   const PosProductScreen({super.key});
@@ -19,6 +20,25 @@ class PosProductScreen extends StatefulWidget {
 class _PosProductScreenState extends State<PosProductScreen> {
   String selectedCategory = 'All Menu';
   String query = '';
+  final List<OrderItemDraft> cart = [];
+  bool isPaymentMode = false;
+  String customerName = '';
+
+  void _openBillManagement(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => BillManagementDialog(
+        onNewBill: () {
+          setState(() {
+            cart.clear();
+            isPaymentMode = false;
+            customerName = '';
+          });
+        },
+      ),
+    );
+  }
 
   List<Product> get filteredProducts {
     final lowerQ = query.trim().toLowerCase();
@@ -112,11 +132,13 @@ class _PosProductScreenState extends State<PosProductScreen> {
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
                       ),
                     ),
@@ -125,19 +147,52 @@ class _PosProductScreenState extends State<PosProductScreen> {
 
                     // Grid produk (scroll)
                     Expanded(
-                      child: ProductGrid(products: filteredProducts),
+                      child: ProductGrid(
+                        products: filteredProducts,
+                        onAdd: (item) => setState(() => cart.add(item)),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // --- Order panel (kanan) ---
             Expanded(
               flex: 4,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-                child: const OrderPanel(),
+                child: OrderPanel(
+                  items: cart,
+                  onRemoveAt: (i) => setState(() => cart.removeAt(i)),
+                  onNewBill: () => setState(() => cart.clear()),
+                  onOpenBills: () => _openBillManagement(context),
+                  isPaymentMode: isPaymentMode,
+                  customerName: customerName,
+                  onStartPayment: (name) {
+                    setState(() {
+                      customerName = name;
+                      isPaymentMode = true;
+                    });
+                  },
+                  onBackToOrder: () {
+                    setState(() {
+                      isPaymentMode = false;
+                      // customerName biarin aja, atau kosongin kalau mau:
+                      // customerName = '';
+                    });
+                  },
+                  onConfirmPaid: () {
+                    // UI dulu: anggap berhasil bayar -> buat bill baru + reset
+                    setState(() {
+                      isPaymentMode = false;
+                      customerName = '';
+                      cart.clear();
+                      // nanti kalau mau: increment order number / save bill history
+                    });
+                    // optional: buka Bill management setelah payment
+                    _openBillManagement(context);
+                  },
+                ),
               ),
             ),
           ],

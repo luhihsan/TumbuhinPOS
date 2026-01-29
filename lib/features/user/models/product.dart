@@ -13,3 +13,23 @@ class Product {
     this.imageAsset,
   });
 }
+
+enum OrderType { dineIn, takeAway }
+
+class OrderItemDraft {
+  final Product product;
+  int qty;
+  OrderType orderType;
+  int price; 
+  String note;
+
+  OrderItemDraft({
+    required this.product,
+    this.qty = 1,
+    this.orderType = OrderType.dineIn,
+    required this.price,
+    this.note = '',
+  });
+
+  int get lineTotal => qty * price;
+}
