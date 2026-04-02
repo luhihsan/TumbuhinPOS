@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../routes/app_routes.dart'; 
 
 class UserDrawer extends StatelessWidget {
   const UserDrawer({super.key});
@@ -21,10 +22,18 @@ class UserDrawer extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: const [
-                  _DrawerItem(icon: Icons.storefront, label: 'POS Product'),
+                  _DrawerItem(
+                    icon: Icons.storefront, 
+                    label: 'POS Product',
+                    routeName: AppRoutes.userPosProduct,
+                  ),
                   _DrawerItem(icon: Icons.history, label: 'Activity'),
                   _DrawerItem(icon: Icons.event_available, label: 'Absence'),
-                  _DrawerItem(icon: Icons.local_shipping, label: 'Consignment'),
+                  _DrawerItem(
+                    icon: Icons.local_shipping, 
+                    label: 'Consignment',
+                    routeName: AppRoutes.userConsignment, 
+                  ),
                   Divider(),
                   _DrawerItem(icon: Icons.inventory_2, label: 'Inventory'),
                   _DrawerItem(icon: Icons.groups, label: 'Shift'),
@@ -82,8 +91,13 @@ class UserDrawer extends StatelessWidget {
 class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? routeName; 
 
-  const _DrawerItem({required this.icon, required this.label});
+  const _DrawerItem({
+    required this.icon, 
+    required this.label,
+    this.routeName, 
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +105,10 @@ class _DrawerItem extends StatelessWidget {
       leading: Icon(icon, color: const Color(0xFF374151)),
       title: Text(label),
       onTap: () {
-        Navigator.pop(context); // tutup drawer dulu
-        // TODO: nanti routing ke page terkait
+        Navigator.pop(context); 
+        if (routeName != null) {
+          Navigator.pushReplacementNamed(context, routeName!);
+        }
       },
     );
   }
