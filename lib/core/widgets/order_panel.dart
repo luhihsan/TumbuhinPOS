@@ -3,26 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import 'package:pos_project_app/features/user/models/product.dart';
+import 'package:pos_project_app/core/widgets/payment_success_dialog.dart';
 
 enum PaymentMethod { cash, qris, online }
 
 class OrderPanel extends StatefulWidget {
-  // ====== data order ======
   final List<OrderItemDraft> items;
   final void Function(int index) onRemoveAt;
-
-  // ====== bill management ======
   final VoidCallback onNewBill;
   final VoidCallback onOpenBills;
-
-  // ====== payment state from parent ======
   final bool isPaymentMode;
   final String customerName;
-
-  // ====== payment events ======
-  final void Function(String customerName) onStartPayment; // setelah input nama
-  final VoidCallback onBackToOrder; // cancel payment
-  final VoidCallback onConfirmPaid; // confirm payment (UI)
+  final void Function(String customerName) onStartPayment;
+  final VoidCallback onBackToOrder;
+  final VoidCallback onConfirmPaid;
 
   const OrderPanel({
     super.key,
@@ -61,7 +55,6 @@ class _OrderPanelState extends State<OrderPanel> {
   int get total => subtotal + tax;
 
   int get change => (paidAmount - total) > 0 ? (paidAmount - total) : 0;
-
   bool get cashEnough => paidAmount >= total && total > 0;
 
   String rp(int n) => 'Rp ${_rupiah.format(n)}';
@@ -69,7 +62,6 @@ class _OrderPanelState extends State<OrderPanel> {
   List<int> _cashSuggestions(int total) {
     if (total <= 0) return const [];
 
-    // pecahan umum IDR (bisa kamu tambah)
     const denoms = <int>[
       1000,
       2000,
@@ -84,24 +76,16 @@ class _OrderPanelState extends State<OrderPanel> {
     ];
 
     final out = <int>{};
-
-    // 1) uang pas (total)
     out.add(total);
 
-    // 2) pecahan terdekat di atas total (1-2 pilihan)
     for (final d in denoms) {
-      if (d >= total) {
-        out.add(d);
-      }
-      if (out.length >= 3) break; // total + 2 pilihan
+      if (d >= total) out.add(d);
+      if (out.length >= 3) break;
     }
 
-    // Kalau total > 1jt, tetap kasih “dibulatkan ke atas” 10rb/50rb
     if (out.length < 3) {
-      int rounded = ((total + 9999) ~/ 10000) * 10000;
-      out.add(rounded);
-      rounded = ((total + 49999) ~/ 50000) * 50000;
-      out.add(rounded);
+      out.add(((total + 9999) ~/ 10000) * 10000);
+      out.add(((total + 49999) ~/ 50000) * 50000);
     }
 
     final list = out.toList()..sort();
@@ -110,12 +94,14 @@ class _OrderPanelState extends State<OrderPanel> {
 
   Future<void> _askCustomerNameThenStartPayment() async {
     final c = TextEditingController(text: widget.customerName);
+
     final name = await showDialog<String>(
       context: context,
       barrierDismissible: true,
       builder: (_) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           child: SizedBox(
             width: 720,
             child: Padding(
@@ -128,7 +114,8 @@ class _OrderPanelState extends State<OrderPanel> {
                       const Spacer(),
                       const Text(
                         'Customer Name',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                        style:
+                            TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const Spacer(),
                       IconButton(
@@ -146,15 +133,18 @@ class _OrderPanelState extends State<OrderPanel> {
                       fillColor: const Color(0xFFF9FAFB),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF60A5FA)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFF60A5FA)),
                       ),
                     ),
                   ),
@@ -180,7 +170,7 @@ class _OrderPanelState extends State<OrderPanel> {
 
     if (name == null) return;
 
-    // reset state cash tiap masuk payment
+    // reset cash state tiap masuk payment
     setState(() {
       method = PaymentMethod.cash;
       paidAmount = 0;
@@ -190,14 +180,52 @@ class _OrderPanelState extends State<OrderPanel> {
     widget.onStartPayment(name);
   }
 
+  Future<void> _showPaymentSuccess() async {
+    final effectivePaid = method == PaymentMethod.cash ? paidAmount : total;
+    final computedChange =
+        (effectivePaid - total) > 0 ? (effectivePaid - total) : 0;
+
+    // UI-only order number (nanti kamu ganti dari state/order service)
+    const orderNumber = '#003';
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PaymentSuccessDialog(
+        amount: total,
+        change: computedChange,
+        orderNumber: orderNumber,
+        paymentMethod: method == PaymentMethod.cash
+            ? 'CASH'
+            : method == PaymentMethod.qris
+                ? 'QRIS'
+                : 'ONLINE',
+        paymentTime: DateTime.now(),
+        onPrintReceipt: () => Navigator.pop(context),
+        onPrintKitchen: () => Navigator.pop(context),
+        onPrintBarista: () => Navigator.pop(context),
+        onNewOrder: () {
+          Navigator.pop(context);
+
+          // reset order dari parent (cart clear + keluar payment mode)
+          widget.onConfirmPaid();
+
+          // reset input cash lokal
+          setState(() {
+            method = PaymentMethod.cash;
+            paidAmount = 0;
+            customPayC.text = '';
+          });
+        },
+      ),
+    );
+  }
+
   Widget _headerOrder() {
     return Row(
       children: [
         InkWell(
-          onTap: () {
-            // bill management dialog kamu sudah ada di file lama? tetap pakai milikmu.
-            widget.onOpenBills();
-          },
+          onTap: widget.onOpenBills,
           borderRadius: BorderRadius.circular(12),
           child: Container(
             width: 42,
@@ -230,10 +258,10 @@ class _OrderPanelState extends State<OrderPanel> {
           tooltip: 'Back',
         ),
         const SizedBox(width: 6),
-        Expanded(
+        const Expanded(
           child: Text(
             'Order Payment',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -257,7 +285,6 @@ class _OrderPanelState extends State<OrderPanel> {
         onTap: () {
           setState(() {
             method = m;
-            // reset cash input kalau ganti method
             paidAmount = 0;
             customPayC.text = '';
           });
@@ -297,7 +324,6 @@ class _OrderPanelState extends State<OrderPanel> {
         const Text('Input Amount', style: TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
 
-        // quick buttons
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -308,10 +334,14 @@ class _OrderPanelState extends State<OrderPanel> {
               height: 52,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: active ? const Color(0xFF0EA5E9) : Colors.white,
-                  foregroundColor: active ? Colors.white : const Color(0xFF111827),
+                  backgroundColor:
+                      active ? const Color(0xFF0EA5E9) : Colors.white,
+                  foregroundColor:
+                      active ? Colors.white : const Color(0xFF111827),
                   side: BorderSide(
-                    color: active ? const Color(0xFF0EA5E9) : const Color(0xFFE5E7EB),
+                    color: active
+                        ? const Color(0xFF0EA5E9)
+                        : const Color(0xFFE5E7EB),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -320,7 +350,7 @@ class _OrderPanelState extends State<OrderPanel> {
                 onPressed: () {
                   setState(() {
                     paidAmount = amt;
-                    customPayC.text = _rupiah.format(amt);
+                    customPayC.text = amt.toString();
                   });
                 },
                 child: Text(rp(amt), style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -331,13 +361,10 @@ class _OrderPanelState extends State<OrderPanel> {
 
         const SizedBox(height: 14),
 
-        // custom input
         TextField(
           controller: customPayC,
           keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-          ],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (v) {
             final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
             final n = int.tryParse(digits) ?? 0;
@@ -367,10 +394,14 @@ class _OrderPanelState extends State<OrderPanel> {
 
         if (paidAmount > 0)
           Text(
-            paidAmount >= total ? 'Change: ${rp(change)}' : 'Kurang: ${rp(total - paidAmount)}',
+            paidAmount >= total
+                ? 'Change: ${rp(change)}'
+                : 'Kurang: ${rp(total - paidAmount)}',
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              color: paidAmount >= total ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+              color: paidAmount >= total
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFDC2626),
             ),
           ),
       ],
@@ -381,8 +412,10 @@ class _OrderPanelState extends State<OrderPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Customer: ${widget.customerName}', style: const TextStyle(color: Color(0xFF6B7280))),
+        Text('Customer: ${widget.customerName}',
+            style: const TextStyle(color: Color(0xFF6B7280))),
         const SizedBox(height: 10),
+
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -412,15 +445,20 @@ class _OrderPanelState extends State<OrderPanel> {
                 children: [
                   const Text('Total', style: TextStyle(fontWeight: FontWeight.w900)),
                   const Spacer(),
-                  Text(rp(total),
-                      style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0EA5E9))),
+                  Text(
+                    rp(total),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0EA5E9),
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
 
+        const SizedBox(height: 16),
         const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w900)),
         const SizedBox(height: 10),
 
@@ -441,13 +479,18 @@ class _OrderPanelState extends State<OrderPanel> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: method == PaymentMethod.cash ? (cashEnough ? widget.onConfirmPaid : null) : widget.onConfirmPaid,
+            onPressed: method == PaymentMethod.cash
+                ? (cashEnough ? _showPaymentSuccess : null)
+                : (total > 0 ? _showPaymentSuccess : null),
             style: ElevatedButton.styleFrom(
               disabledBackgroundColor: const Color(0xFF9CA3AF),
               disabledForegroundColor: const Color(0xFFE5E7EB),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
-            child: const Text('Confirm Payment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+            child: const Text(
+              'Confirm Payment',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+            ),
           ),
         ),
       ],
@@ -571,7 +614,6 @@ class _OrderPanelState extends State<OrderPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // Panel kanan harus aman overflow: middle scroll, footer fixed
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
@@ -588,7 +630,6 @@ class _OrderPanelState extends State<OrderPanel> {
 
           const SizedBox(height: 12),
 
-          // footer untuk ORDER mode: tombol Charge
           if (!widget.isPaymentMode)
             SafeArea(
               top: false,

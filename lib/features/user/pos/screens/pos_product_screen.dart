@@ -8,6 +8,7 @@ import '../../../../core/widgets/product_grid.dart';
 import '../../../../core/widgets/order_panel.dart';
 import '../../../../core/widgets/realtime_clock.dart';
 import '../../navigation/user_drawer.dart';
+
 import 'package:pos_project_app/core/widgets/bill_management_dialog.dart';
 
 class PosProductScreen extends StatefulWidget {
@@ -20,7 +21,9 @@ class PosProductScreen extends StatefulWidget {
 class _PosProductScreenState extends State<PosProductScreen> {
   String selectedCategory = 'All Menu';
   String query = '';
+
   final List<OrderItemDraft> cart = [];
+
   bool isPaymentMode = false;
   String customerName = '';
 
@@ -43,13 +46,14 @@ class _PosProductScreenState extends State<PosProductScreen> {
   List<Product> get filteredProducts {
     final lowerQ = query.trim().toLowerCase();
     return dummyProducts.where((p) {
-      final catOk = selectedCategory == 'All Menu'
-          ? true
-          : p.category == selectedCategory;
+      final catOk =
+          selectedCategory == 'All Menu' ? true : p.category == selectedCategory;
+
       final qOk = lowerQ.isEmpty
           ? true
           : (p.name.toLowerCase().contains(lowerQ) ||
               p.category.toLowerCase().contains(lowerQ));
+
       return catOk && qOk;
     }).toList();
   }
@@ -62,19 +66,19 @@ class _PosProductScreenState extends State<PosProductScreen> {
     ];
 
     return Scaffold(
-      drawer: const UserDrawer(), // hamburger -> sidebar
+      drawer: const UserDrawer(),
       backgroundColor: const Color(0xFFF3F4F6),
       body: SafeArea(
         child: Row(
           children: [
-            // --- Main content (kiri besar) ---
+            // ================= LEFT =================
             Expanded(
               flex: 7,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // Top bar: hamburger + date/time + action
+                    // Top bar
                     Row(
                       children: [
                         Builder(
@@ -84,8 +88,6 @@ class _PosProductScreenState extends State<PosProductScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-
-                        // Date (contoh: Tue, 26 Aug 2025)
                         Text(
                           DateFormat('EEE, dd MMM yyyy').format(DateTime.now()),
                           style: const TextStyle(
@@ -94,15 +96,8 @@ class _PosProductScreenState extends State<PosProductScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-
-                        // Real-time clock
-                        const RealTimeClock(
-                          format: 'hh:mm a',
-                        ),
-
+                        const RealTimeClock(format: 'hh:mm a'),
                         const Spacer(),
-
-                        // contoh button kecil "Close Order"
                         FilledButton.icon(
                           onPressed: () {},
                           icon: const Icon(Icons.close, size: 18),
@@ -113,7 +108,7 @@ class _PosProductScreenState extends State<PosProductScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Categories horizontal scroll
+                    // Categories
                     CategoryChips(
                       categories: categories,
                       selected: selectedCategory,
@@ -145,7 +140,7 @@ class _PosProductScreenState extends State<PosProductScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Grid produk (scroll)
+                    // Grid produk
                     Expanded(
                       child: ProductGrid(
                         products: filteredProducts,
@@ -157,6 +152,7 @@ class _PosProductScreenState extends State<PosProductScreen> {
               ),
             ),
 
+            // ================= RIGHT =================
             Expanded(
               flex: 4,
               child: Padding(
@@ -164,33 +160,41 @@ class _PosProductScreenState extends State<PosProductScreen> {
                 child: OrderPanel(
                   items: cart,
                   onRemoveAt: (i) => setState(() => cart.removeAt(i)),
-                  onNewBill: () => setState(() => cart.clear()),
+                  onNewBill: () {
+                    setState(() {
+                      cart.clear();
+                      isPaymentMode = false;
+                      customerName = '';
+                    });
+                  },
                   onOpenBills: () => _openBillManagement(context),
+
+                  // payment mode
                   isPaymentMode: isPaymentMode,
                   customerName: customerName,
+
+                  // start payment -> setelah input nama
                   onStartPayment: (name) {
                     setState(() {
                       customerName = name;
                       isPaymentMode = true;
                     });
                   },
+
+                  // back
                   onBackToOrder: () {
                     setState(() {
                       isPaymentMode = false;
-                      // customerName biarin aja, atau kosongin kalau mau:
-                      // customerName = '';
                     });
                   },
+
+                  // confirm paid -> RESET ORDER (dipanggil dari PaymentSuccessDialog: New Order)
                   onConfirmPaid: () {
-                    // UI dulu: anggap berhasil bayar -> buat bill baru + reset
                     setState(() {
                       isPaymentMode = false;
                       customerName = '';
                       cart.clear();
-                      // nanti kalau mau: increment order number / save bill history
                     });
-                    // optional: buka Bill management setelah payment
-                    _openBillManagement(context);
                   },
                 ),
               ),
