@@ -45,12 +45,17 @@ class _UserLoginState extends State<UserLogin> {
     try {
       final success = await _authService.loginPos(email, password);
       
-      if (success && mounted) {
-        // Jika berhasil, navigasi ke halaman POS
-        Navigator.pushReplacementNamed(
-          context,
-          AppRoutes.userPosProduct,
-        );
+      if (mounted) {
+        if (success) {
+          Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.userPosProduct,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Email/Password salah.')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

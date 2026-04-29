@@ -14,11 +14,18 @@ class AuthService {
         },
       );
 
+      print("RESPONSE SERVER: $response");
+
       if (response['token'] != null) {
         ApiConfig.token = response['token']; 
         return true;
+      } 
+      else if (response['data'] != null && response['data']['token'] != null) {
+        ApiConfig.token = response['data']['token'];
+        return true;
       }
-      return false;
+      
+      return false; // Kembalikan false jika tidak ada token yang ditemukan
     } catch (e) {
       throw Exception('Gagal login: ${e.toString()}');
     }
