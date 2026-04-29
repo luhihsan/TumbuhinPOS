@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-import 'package:pos_project_app/features/user/models/product.dart';
+import 'package:pos_project_app/models/product_model.dart';
 import 'package:pos_project_app/core/widgets/payment_success_dialog.dart';
 
 enum PaymentMethod { cash, qris, online }
@@ -114,8 +114,8 @@ class _OrderPanelState extends State<OrderPanel> {
                       const Spacer(),
                       const Text(
                         'Customer Name',
-                        style:
-                            TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const Spacer(),
                       IconButton(
@@ -133,18 +133,15 @@ class _OrderPanelState extends State<OrderPanel> {
                       fillColor: const Color(0xFFF9FAFB),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Color(0xFF60A5FA)),
+                        borderSide: const BorderSide(color: Color(0xFF60A5FA)),
                       ),
                     ),
                   ),
@@ -321,9 +318,9 @@ class _OrderPanelState extends State<OrderPanel> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 10),
-        const Text('Input Amount', style: TextStyle(fontWeight: FontWeight.w800)),
+        const Text('Input Amount',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
-
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -353,14 +350,13 @@ class _OrderPanelState extends State<OrderPanel> {
                     customPayC.text = amt.toString();
                   });
                 },
-                child: Text(rp(amt), style: const TextStyle(fontWeight: FontWeight.w800)),
+                child: Text(rp(amt),
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
               ),
             );
           }).toList(),
         ),
-
         const SizedBox(height: 14),
-
         TextField(
           controller: customPayC,
           keyboardType: TextInputType.number,
@@ -389,9 +385,7 @@ class _OrderPanelState extends State<OrderPanel> {
             ),
           ),
         ),
-
         const SizedBox(height: 10),
-
         if (paidAmount > 0)
           Text(
             paidAmount >= total
@@ -415,7 +409,6 @@ class _OrderPanelState extends State<OrderPanel> {
         Text('Customer: ${widget.customerName}',
             style: const TextStyle(color: Color(0xFF6B7280))),
         const SizedBox(height: 10),
-
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -429,7 +422,8 @@ class _OrderPanelState extends State<OrderPanel> {
                 children: [
                   const Text('Subtotal'),
                   const Spacer(),
-                  Text(rp(subtotal), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(rp(subtotal),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -437,13 +431,15 @@ class _OrderPanelState extends State<OrderPanel> {
                 children: [
                   const Text('Tax (0%)'),
                   const Spacer(),
-                  Text(rp(tax), style: const TextStyle(fontWeight: FontWeight.w700)),
+                  Text(rp(tax),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                 ],
               ),
               const Divider(height: 18),
               Row(
                 children: [
-                  const Text('Total', style: TextStyle(fontWeight: FontWeight.w900)),
+                  const Text('Total',
+                      style: TextStyle(fontWeight: FontWeight.w900)),
                   const Spacer(),
                   Text(
                     rp(total),
@@ -457,23 +453,27 @@ class _OrderPanelState extends State<OrderPanel> {
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-        const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w900)),
+        const Text('Payment Method',
+            style: TextStyle(fontWeight: FontWeight.w900)),
         const SizedBox(height: 10),
-
         Row(
           children: [
-            _methodCard(m: PaymentMethod.cash, label: 'Cash', icon: Icons.payments_outlined),
+            _methodCard(
+                m: PaymentMethod.cash,
+                label: 'Cash',
+                icon: Icons.payments_outlined),
             const SizedBox(width: 12),
-            _methodCard(m: PaymentMethod.qris, label: 'QRIS', icon: Icons.qr_code_2),
+            _methodCard(
+                m: PaymentMethod.qris, label: 'QRIS', icon: Icons.qr_code_2),
             const SizedBox(width: 12),
-            _methodCard(m: PaymentMethod.online, label: 'Online', icon: Icons.delivery_dining),
+            _methodCard(
+                m: PaymentMethod.online,
+                label: 'Online',
+                icon: Icons.delivery_dining),
           ],
         ),
-
         if (method == PaymentMethod.cash) _cashSection(),
-
         const SizedBox(height: 18),
         SizedBox(
           width: double.infinity,
@@ -485,7 +485,8 @@ class _OrderPanelState extends State<OrderPanel> {
             style: ElevatedButton.styleFrom(
               disabledBackgroundColor: const Color(0xFF9CA3AF),
               disabledForegroundColor: const Color(0xFFE5E7EB),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text(
               'Confirm Payment',
@@ -514,11 +515,11 @@ class _OrderPanelState extends State<OrderPanel> {
         ),
         const SizedBox(height: 12),
         const Divider(),
-
         if (widget.items.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 18),
-            child: Text('No Item Selected', style: TextStyle(color: Color(0xFF6B7280))),
+            child: Text('No Item Selected',
+                style: TextStyle(color: Color(0xFF6B7280))),
           )
         else
           ListView.separated(
@@ -528,7 +529,8 @@ class _OrderPanelState extends State<OrderPanel> {
             separatorBuilder: (_, __) => const Divider(height: 18),
             itemBuilder: (context, i) {
               final it = widget.items[i];
-              final type = it.orderType == OrderType.dineIn ? 'Dine In' : 'Take Away';
+              final type =
+                  it.orderType == OrderType.dineIn ? 'Dine In' : 'Take Away';
 
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -541,7 +543,8 @@ class _OrderPanelState extends State<OrderPanel> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: const Color(0xFFE5E7EB)),
                     ),
-                    child: const Icon(Icons.restaurant, color: Color(0xFF9CA3AF)),
+                    child:
+                        const Icon(Icons.restaurant, color: Color(0xFF9CA3AF)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -549,7 +552,8 @@ class _OrderPanelState extends State<OrderPanel> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('${it.qty}x ${it.product.name}',
-                            style: const TextStyle(fontWeight: FontWeight.w800)),
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w800)),
                         const SizedBox(height: 4),
                         Text('$type • ${rp(it.price)}',
                             style: const TextStyle(
@@ -581,14 +585,13 @@ class _OrderPanelState extends State<OrderPanel> {
               );
             },
           ),
-
         const Divider(),
-
         Row(
           children: [
             const Text('Subtotal', style: TextStyle(color: Color(0xFF6B7280))),
             const Spacer(),
-            Text(rp(subtotal), style: const TextStyle(color: Color(0xFF6B7280))),
+            Text(rp(subtotal),
+                style: const TextStyle(color: Color(0xFF6B7280))),
           ],
         ),
         const SizedBox(height: 6),
@@ -605,7 +608,8 @@ class _OrderPanelState extends State<OrderPanel> {
           children: [
             const Text('Total', style: TextStyle(fontWeight: FontWeight.w900)),
             const Spacer(),
-            Text(rp(total), style: const TextStyle(fontWeight: FontWeight.w900)),
+            Text(rp(total),
+                style: const TextStyle(fontWeight: FontWeight.w900)),
           ],
         ),
       ],
@@ -616,20 +620,18 @@ class _OrderPanelState extends State<OrderPanel> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           widget.isPaymentMode ? _headerPayment() : _headerOrder(),
           const SizedBox(height: 12),
-
           Expanded(
             child: SingleChildScrollView(
               child: widget.isPaymentMode ? _paymentBody() : _orderBody(),
             ),
           ),
-
           const SizedBox(height: 12),
-
           if (!widget.isPaymentMode)
             SafeArea(
               top: false,
@@ -637,7 +639,8 @@ class _OrderPanelState extends State<OrderPanel> {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton(
-                  onPressed: total <= 0 ? null : _askCustomerNameThenStartPayment,
+                  onPressed:
+                      total <= 0 ? null : _askCustomerNameThenStartPayment,
                   child: Text('Charge ${rp(total)}'),
                 ),
               ),

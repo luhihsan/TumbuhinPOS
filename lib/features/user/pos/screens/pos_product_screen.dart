@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../data/dummy_products.dart';
-import '../../models/product.dart';
+import '../../../../models/product_model.dart';
 import '../../../../core/widgets/category_chips.dart';
 import '../../../../core/widgets/product_grid.dart';
 import '../../../../core/widgets/order_panel.dart';
 import '../../../../core/widgets/realtime_clock.dart';
 import '../../navigation/user_drawer.dart';
-
 import 'package:pos_project_app/core/widgets/bill_management_dialog.dart';
+
+import '../../../../services/product_services.dart'; 
 
 class PosProductScreen extends StatefulWidget {
   const PosProductScreen({super.key});
@@ -21,11 +21,45 @@ class PosProductScreen extends StatefulWidget {
 class _PosProductScreenState extends State<PosProductScreen> {
   String selectedCategory = 'All Menu';
   String query = '';
-
   final List<OrderItemDraft> cart = [];
-
   bool isPaymentMode = false;
   String customerName = '';
+
+  bool isLoading = true; 
+  List<Product> products = []; 
+  List<String> categories = ['All Menu']; 
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDataFromApi(); 
+  }
+
+  Future<void> _fetchDataFromApi() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final fetchedProducts = await ProductService().fetchProducts();
+      final uniqueCategories = fetchedProducts.map((p) => p.category).toSet().toList();
+
+      setState(() {
+        products = fetchedProducts;
+        categories = ['All Menu', ...uniqueCategories];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat produk: $e')),
+        );
+      }
+    }
+  }
 
   void _openBillManagement(BuildContext context) {
     showDialog(
@@ -45,7 +79,8 @@ class _PosProductScreenState extends State<PosProductScreen> {
 
   List<Product> get filteredProducts {
     final lowerQ = query.trim().toLowerCase();
-    return dummyProducts.where((p) {
+    
+    return products.where((p) {
       final catOk =
           selectedCategory == 'All Menu' ? true : p.category == selectedCategory;
 
@@ -60,18 +95,12 @@ class _PosProductScreenState extends State<PosProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = <String>[
-      'All Menu',
-      ...dummyCategories, // dari dummy_products.dart
-    ];
-
     return Scaffold(
       drawer: const UserDrawer(),
       backgroundColor: const Color(0xFFF3F4F6),
       body: SafeArea(
         child: Row(
           children: [
-            // ================= LEFT =================
             Expanded(
               flex: 7,
               child: Padding(
@@ -99,21 +128,25 @@ class _PosProductScreenState extends State<PosProductScreen> {
                         const RealTimeClock(format: 'hh:mm a'),
                         const Spacer(),
                         FilledButton.icon(
-                          onPressed: () {},
-                          icon: const Icon(Icons.close, size: 18),
-                          label: const Text('Close Order'),
+                          onPressed: () {
+                            // Opsional: Tombol refresh data API
+                            _fetchDataFromApi();
+                          },
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: const Text('Refresh Data'),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 12),
 
-                    // Categories
-                    CategoryChips(
-                      categories: categories,
-                      selected: selectedCategory,
-                      onSelected: (c) => setState(() => selectedCategory = c),
-                    ),
+                    isLoading 
+                      ? const Center(child: LinearProgressIndicator()) 
+                      : CategoryChips(
+                          categories: categories, // Pakai kategori dari state API
+                          selected: selectedCategory,
+                          onSelected: (c) => setState(() => selectedCategory = c),
+                        ),
 
                     const SizedBox(height: 12),
 
@@ -127,32 +160,31 @@ class _PosProductScreenState extends State<PosProductScreen> {
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE5E7EB)),
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE5E7EB)),
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 12),
-
-                    // Grid produk
                     Expanded(
-                      child: ProductGrid(
-                        products: filteredProducts,
-                        onAdd: (item) => setState(() => cart.add(item)),
-                      ),
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : products.isEmpty
+                              ? const Center(child: Text("Tidak ada produk tersedia"))
+                              : ProductGrid(
+                                  products: filteredProducts,
+                                  onAdd: (item) => setState(() => cart.add(item)),
+                                ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // ================= RIGHT =================
             Expanded(
               flex: 4,
               child: Padding(
@@ -168,12 +200,8 @@ class _PosProductScreenState extends State<PosProductScreen> {
                     });
                   },
                   onOpenBills: () => _openBillManagement(context),
-
-                  // payment mode
                   isPaymentMode: isPaymentMode,
                   customerName: customerName,
-
-                  // start payment -> setelah input nama
                   onStartPayment: (name) {
                     setState(() {
                       customerName = name;
@@ -188,7 +216,7 @@ class _PosProductScreenState extends State<PosProductScreen> {
                     });
                   },
 
-                  // confirm paid -> RESET ORDER (dipanggil dari PaymentSuccessDialog: New Order)
+                  // confirm paid
                   onConfirmPaid: () {
                     setState(() {
                       isPaymentMode = false;

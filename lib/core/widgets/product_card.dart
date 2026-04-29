@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos_project_app/features/user/models/product.dart';
+import 'package:pos_project_app/models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -123,17 +123,17 @@ class _AddOrderDialogState extends State<_AddOrderDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: dialogWidth,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(22),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 children: [
                   Expanded(
@@ -189,17 +189,16 @@ class _AddOrderDialogState extends State<_AddOrderDialog> {
                           children: [
                             _SquareBtn(
                               icon: Icons.remove,
-                              onTap: qty > 1
-                                  ? () => setState(() => qty--)
-                                  : null,
+                              onTap:
+                                  qty > 1 ? () => setState(() => qty--) : null,
                             ),
                             const SizedBox(width: 10),
                             SizedBox(
                               width: 72,
                               child: TextField(
                                 textAlign: TextAlign.center,
-                                controller: TextEditingController(
-                                    text: qty.toString()),
+                                controller:
+                                    TextEditingController(text: qty.toString()),
                                 readOnly: true,
                                 decoration: _inputDeco(),
                               ),

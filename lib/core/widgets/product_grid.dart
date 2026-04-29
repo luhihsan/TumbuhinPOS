@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos_project_app/features/user/models/product.dart';
+import 'package:pos_project_app/models/product_model.dart';
 import 'package:pos_project_app/core/widgets/product_card.dart';
 
 class ProductGrid extends StatelessWidget {
@@ -17,7 +17,11 @@ class ProductGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, c) {
         final w = c.maxWidth;
-        final crossAxisCount = w > 900 ? 4 : w > 650 ? 3 : 2;
+        final crossAxisCount = w > 900
+            ? 4
+            : w > 650
+                ? 3
+                : 2;
 
         return GridView.builder(
           itemCount: products.length,
