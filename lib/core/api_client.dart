@@ -8,7 +8,7 @@ class ApiClient {
       'Content-Type': 'application/json', 
     };
     if (ApiConfig.token != null) {
-      headers['Authorization'] = 'Bearer ${ApiConfig.token}'; //
+      headers['Authorization'] = 'Bearer ${ApiConfig.token}';
     }
     return headers;
   }
@@ -17,6 +17,15 @@ class ApiClient {
     final response = await http.get(
       Uri.parse('${ApiConfig.baseUrl}$endpoint'),
       headers: _headers,
+    );
+    return _handleResponse(response);
+  }
+
+  Future<dynamic> post(String endpoint, {Map<String, dynamic>? body}) async {
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+      headers: _headers,
+      body: body != null ? json.encode(body) : null,
     );
     return _handleResponse(response);
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../../../routes/app_routes.dart';
+import '../../../services/auth_services.dart'; 
 
 class UserLogin extends StatefulWidget {
   const UserLogin({super.key});
@@ -14,15 +14,55 @@ class _UserLoginState extends State<UserLogin> {
   final passC = TextEditingController();
   bool rememberMe = false;
   bool obscure = true;
+  bool isLoading = false;
+  
+  final AuthService _authService = AuthService();
 
-static const String logoPath = 'assets/logo_project.png';
-static const String heroPath = 'assets/logo_app.png';
+  static const String logoPath = 'assets/logo_project.png';
+  static const String heroPath = 'assets/logo_app.png';
 
   @override
   void dispose() {
     emailC.dispose();
     passC.dispose();
     super.dispose();
+  }
+
+  // Fungsi untuk handle klik tombol login
+  Future<void> _handleLogin() async {
+    final email = emailC.text.trim();
+    final password = passC.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email dan password tidak boleh kosong')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final success = await _authService.loginPos(email, password);
+      
+      if (success && mounted) {
+        // Jika berhasil, navigasi ke halaman POS
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.userPosProduct,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
 
   @override
@@ -200,31 +240,34 @@ static const String heroPath = 'assets/logo_app.png';
 
                               const SizedBox(height: 8),
 
-                              // Login disabled (backend belum)
                               SizedBox(
                                 width: double.infinity,
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      AppRoutes.userPosProduct,
-                                    );
-                                  },
+                                  onPressed: isLoading ? null : _handleLogin, 
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF3B82F6), // biru aktif
+                                    backgroundColor: const Color(0xFF3B82F6),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                                  child: isLoading 
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Login',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
                                 ),
                               ),
 
